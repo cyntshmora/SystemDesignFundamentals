@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design Cheat Sheet</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #171b22;
+    --border: #1e2430;
+    --border2: #252d3a;
+    --text: #c9d1e0;
+    --text-dim: #6b7a95;
+    --text-bright: #e8edf7;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7fff6b;
+    --accent4: #c77dff;
+    --accent5: #ffd166;
+    --red: #ff4757;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border2);
+    padding: 18px 28px 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-bright);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .header-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+  .tabs {
+    display: flex;
+    gap: 2px;
+    margin-left: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px;
+  }
+  .tab {
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    border: none;
+    background: transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); background: var(--border); }
+  .tab.active { background: var(--accent); color: var(--bg); }
+
+  /* ── LAYOUT ── */
+  .page { display: none; padding: 20px 24px; }
+  .page.active { display: block; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+  .col-span-4 { grid-column: span 4; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 8px 12px 7px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .card-body { padding: 10px 12px; }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-blue   { background: var(--accent); }
+  .dot-orange { background: var(--accent2); }
+  .dot-green  { background: var(--accent3); }
+  .dot-purple { background: var(--accent4); }
+  .dot-yellow { background: var(--accent5); }
+  .dot-red    { background: var(--red); }
+
+  /* ── PROBLEM BLOCKS ── */
+  .problem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .problem-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .problem-header.open { border-bottom-color: var(--border); }
+  .problem-number {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--border2);
+    line-height: 1;
+    min-width: 28px;
+  }
+  .problem-title {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+  .problem-tags { display: flex; gap: 5px; }
+  .tag {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    font-family: var(--mono);
+  }
+  .tag-blue   { background: rgba(0,212,255,0.12); color: var(--accent); border: 1px solid rgba(0,212,255,0.25); }
+  .tag-orange { background: rgba(255,107,53,0.12); color: var(--accent2); border: 1px solid rgba(255,107,53,0.25); }
+  .tag-green  { background: rgba(127,255,107,0.1); color: var(--accent3); border: 1px solid rgba(127,255,107,0.2); }
+  .tag-purple { background: rgba(199,125,255,0.12); color: var(--accent4); border: 1px solid rgba(199,125,255,0.25); }
+  .tag-yellow { background: rgba(255,209,102,0.12); color: var(--accent5); border: 1px solid rgba(255,209,102,0.25); }
+  .tag-red    { background: rgba(255,71,87,0.1); color: var(--red); border: 1px solid rgba(255,71,87,0.2); }
+
+  .problem-body {
+    display: none;
+    padding: 14px;
+    background: var(--surface2);
+  }
+  .problem-body.open { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* ── SECTIONS INSIDE PROBLEMS ── */
+  .psec-title {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .psec { margin-bottom: 10px; }
+
+  /* ── COMPONENT FLOW ── */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 6px 0;
+  }
+  .flow-node {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+    color: var(--text-bright);
+    white-space: nowrap;
+  }
+  .flow-node.highlight {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,212,255,0.06);
+  }
+  .flow-node.highlight-o {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(255,107,53,0.06);
+  }
+  .flow-node.highlight-g {
+    border-color: var(--accent3);
+    color: var(--accent3);
+    background: rgba(127,255,107,0.06);
+  }
+  .flow-node.highlight-p {
+    border-color: var(--accent4);
+    color: var(--accent4);
+    background: rgba(199,125,255,0.06);
+  }
+  .arrow { color: var(--text-dim); font-size: 11px; }
+
+  /* ── ROWS ── */
+  .row {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .row:last-child { border-bottom: none; }
+  .row-key {
+    color: var(--accent);
+    min-width: 110px;
+    flex-shrink: 0;
+    font-weight: 600;
+    font-size: 10px;
+  }
+  .row-key.orange { color: var(--accent2); }
+  .row-key.green  { color: var(--accent3); }
+  .row-key.purple { color: var(--accent4); }
+  .row-key.yellow { color: var(--accent5); }
+  .row-val { color: var(--text); font-size: 10px; }
+
+  /* ── TRADEOFF TABLE ── */
+  .tradeoff {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+  .tradeoff th {
+    background: var(--bg);
+    color: var(--text-dim);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+  .tradeoff td {
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+  .tradeoff tr:last-child td { border-bottom: none; }
+  .tradeoff tr:hover td { background: rgba(255,255,255,0.02); }
+  .good { color: var(--accent3); }
+  .bad  { color: var(--red); }
+  .warn { color: var(--accent5); }
+
+  /* ── PILL LIST ── */
+  .pill-list { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0; }
+  .pill {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 10px;
+    color: var(--text);
+  }
+  .pill.accent  { border-color: rgba(0,212,255,0.3);   color: var(--accent);  background: rgba(0,212,255,0.05); }
+  .pill.orange  { border-color: rgba(255,107,53,0.3);  color: var(--accent2); background: rgba(255,107,53,0.05); }
+  .pill.green   { border-color: rgba(127,255,107,0.2); color: var(--accent3); background: rgba(127,255,107,0.04); }
+  .pill.purple  { border-color: rgba(199,125,255,0.3); color: var(--accent4); background: rgba(199,125,255,0.05); }
+  .pill.yellow  { border-color: rgba(255,209,102,0.3); color: var(--accent5); background: rgba(255,209,102,0.05); }
+
+  /* ── CODE ── */
+  .code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 9.5px;
+    color: #8ab4d4;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 6px 0;
+    line-height: 1.6;
+  }
+  .code .c  { color: var(--text-dim); }
+  .code .k  { color: var(--accent4); }
+  .code .s  { color: var(--accent3); }
+  .code .n  { color: var(--accent); }
+
+  /* ── FORMULA BLOCKS ── */
+  .formula {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 10px;
+    color: var(--accent5);
+    margin: 5px 0;
+    font-weight: 600;
+  }
+
+  /* ── WARN BOX ── */
+  .warn-box {
+    background: rgba(255,71,87,0.06);
+    border: 1px solid rgba(255,71,87,0.2);
+    border-left: 3px solid var(--red);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-size: 10px;
+    color: #ff8f96;
+    margin: 6px 0;
+  }
+  .tip-box {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-size: 10px;
+    color: #7dd8f0;
+    margin: 6px 0;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 18px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .chevron { transition: transform 0.2s; display: inline-block; color: var(--text-dim); font-size: 10px; }
+  .chevron.open { transform: rotate(90deg); }
+
+  /* ── QUICK REF TABLE ── */
+  .ref-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .ref-table th {
+    background: var(--bg);
+    color: var(--accent);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+  .ref-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table tr:hover td { background: rgba(255,255,255,0.015); }
+  .ref-table td:first-child { color: var(--accent5); font-weight: 600; }
+
+  /* ── NUMBERS BIG ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0; }
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .stat-val { font-family: var(--sans); font-size: 16px; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media print {
+    .tabs, .header { position: static; }
+    .page { display: block !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ System Design</h1>
+  <span class="header-sub"> Backend Patterns </span>
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('problems')">Problems</button>
+    <button class="tab" onclick="showPage('components')">Components</button>
+    <button class="tab" onclick="showPage('databases')">Databases</button>
+    <button class="tab" onclick="showPage('numbers')">Numbers</button>
+    <button class="tab" onclick="showPage('tradeoffs')">Trade-offs</button>
+    <button class="tab" onclick="showPage('framework')">Framework</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE 1: PROBLEMS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="problems" class="page active">
+
+  <div class="section-title">Classic System Design Problems</div>
+
+  <!-- URL SHORTENER -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">01</div>
+      <div>
+        <div class="problem-title">URL Shortener (TinyURL)</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Generate short codes → redirect to originals at scale</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-blue">Hashing</span>
+        <span class="tag tag-green">Cache</span>
+        <span class="tag tag-orange">DB</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Architecture Flow</div>
+          <div class="flow">
+            <span class="flow-node">Client</span><span class="arrow">→</span>
+            <span class="flow-node">LB</span><span class="arrow">→</span>
+            <span class="flow-node highlight">API Service</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">Redis Cache</span><span class="arrow">→</span>
+            <span class="flow-node">PostgreSQL</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node" style="color:var(--text-dim)">POST /shorten</span><span class="arrow">→</span>
+            <span class="flow-node highlight-o">hash(url)</span><span class="arrow">→</span>
+            <span class="flow-node">store mapping</span><span class="arrow">→</span>
+            <span class="flow-node">return short code</span>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Key Decisions</div>
+          <div class="row"><span class="row-key">Short code gen</span><span class="row-val">Base62(counter) OR MD5(url)[0:7]. Base62 = no collisions, predictable. MD5 = collisions possible, need check</span></div>
+          <div class="row"><span class="row-key">ID generation</span><span class="row-val">Distributed: Snowflake ID or DB auto-increment (single point). Use counter in ZooKeeper if multi-node</span></div>
+          <div class="row"><span class="row-key">Redirect type</span><span class="row-val">301 (permanent, browser caches = less load) vs 302 (temporary, every req hits server = analytics data)</span></div>
+          <div class="row"><span class="row-key">Read/Write ratio</span><span class="row-val">100:1 reads vs writes → optimize for reads. Cache hot URLs in Redis with TTL</span></div>
+          <div class="row"><span class="row-key">Custom aliases</span><span class="row-val">Allow user-defined slugs. Check uniqueness on write. Store in same table with flag</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Schema & Scale</div>
+          <div class="code"><span class="c">-- Core table</span>
+urls(id BIGINT PK, short_code VARCHAR(8) UNIQUE,
+     long_url TEXT, user_id, created_at, expires_at,
+     click_count BIGINT DEFAULT 0)
+
+<span class="c">-- Indexes</span>
+idx_short_code (short_code) <span class="c">← most critical</span>
+idx_user_id    (user_id, created_at)</div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Scale Considerations</div>
+          <div class="row"><span class="row-key orange">Caching</span><span class="row-val">Cache shortCode→longURL in Redis. LRU eviction. Cache hit rate target: 80%+</span></div>
+          <div class="row"><span class="row-key orange">DB scaling</span><span class="row-val">Read replicas for redirect lookups. Write to master only. Partition by short_code range if needed</span></div>
+          <div class="row"><span class="row-key orange">Analytics</span><span class="row-val">Async: publish click event to Kafka → consumer updates stats. Don't block redirect on analytics write</span></div>
+        </div>
+        <div class="warn-box">⚠ Collision handling: if MD5-based, check DB before insert. On collision, append counter or re-hash.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATE LIMITER -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">02</div>
+      <div>
+        <div class="problem-title">Rate Limiter</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Throttle API requests per user/IP at scale</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-purple">Distributed</span>
+        <span class="tag tag-green">Redis</span>
+        <span class="tag tag-yellow">Algorithms</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Architecture</div>
+          <div class="flow">
+            <span class="flow-node">Client</span><span class="arrow">→</span>
+            <span class="flow-node highlight">API Gateway</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">Redis</span><span class="arrow">→</span>
+            <span class="flow-node">[allow/deny]</span><span class="arrow">→</span>
+            <span class="flow-node">Backend</span>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Algorithm Comparison</div>
+          <table class="tradeoff">
+            <tr><th>Algorithm</th><th>Pros</th><th>Cons</th></tr>
+            <tr><td>Token Bucket</td><td class="good">Allows bursts, memory efficient</td><td class="warn">Complex at distributed scale</td></tr>
+            <tr><td>Fixed Window</td><td class="good">Simple, fast</td><td class="bad">Boundary exploit (2x burst)</td></tr>
+            <tr><td>Sliding Window Log</td><td class="good">Accurate</td><td class="bad">High memory (stores timestamps)</td></tr>
+            <tr><td>Sliding Window Counter</td><td class="good">Accurate + efficient</td><td class="warn">Approx (interpolation)</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Redis Implementation (Sliding Window)</div>
+          <div class="code"><span class="c">-- Atomic Lua script (no race conditions)</span>
+local key = KEYS[1]       <span class="c">-- "rl:{userId}:{window}"</span>
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])  <span class="c">-- seconds</span>
+local limit = tonumber(ARGV[3])
+
+redis.call('ZREMRANGEBYSCORE', key, 0, now-window)
+local count = redis.call('ZCARD', key)
+
+if count < limit then
+  redis.call('ZADD', key, now, now)
+  redis.call('EXPIRE', key, window)
+  return 1  <span class="c">-- allowed</span>
+end
+return 0  <span class="c">-- denied → return 429</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Response Headers</div>
+          <div class="row"><span class="row-key green">X-RateLimit-Limit</span><span class="row-val">100</span></div>
+          <div class="row"><span class="row-key green">X-RateLimit-Remaining</span><span class="row-val">73</span></div>
+          <div class="row"><span class="row-key green">Retry-After</span><span class="row-val">37 (seconds until reset) — on 429</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEWS FEED -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">03</div>
+      <div>
+        <div class="problem-title">News Feed / Timeline (Twitter/Instagram)</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Fanout strategies for social content delivery</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-blue">Fanout</span>
+        <span class="tag tag-green">Cache</span>
+        <span class="tag tag-purple">Queue</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Two Fanout Models</div>
+          <div class="row"><span class="row-key">Fanout on Write</span><span class="row-val">Pre-compute feed on post. Push to followers' Redis lists. Fast reads. Bad for celebrities (10M followers = 10M writes)</span></div>
+          <div class="row"><span class="row-key">Fanout on Read</span><span class="row-val">Compute feed at read time. No write amplification. Slow for active users following 1000s of accounts</span></div>
+          <div class="row"><span class="row-key orange">Hybrid ✓</span><span class="row-val">Fanout-on-write for regular users. Fanout-on-read for celebrities (threshold: >N followers). Twitter uses this</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Flow (Hybrid)</div>
+          <div class="flow">
+            <span class="flow-node">POST /tweet</span><span class="arrow">→</span>
+            <span class="flow-node highlight">Write DB</span><span class="arrow">→</span>
+            <span class="flow-node highlight-p">Kafka</span><span class="arrow">→</span>
+            <span class="flow-node">Fanout Worker</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node">Fanout Worker</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">Redis List</span><span class="arrow">→</span>
+            <span class="flow-node">per follower feed</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node">GET /feed</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">Redis</span><span class="arrow">→</span>
+            <span class="flow-node">merge celeb posts</span><span class="arrow">→</span>
+            <span class="flow-node">sort+return</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Data Model</div>
+          <div class="code">posts(id, user_id, content, media_url,
+      created_at, like_count, comment_count)
+
+follows(follower_id, followee_id, created_at)
+<span class="c">-- Index: (follower_id) for "who do I follow?"</span>
+<span class="c">-- Index: (followee_id) for "who follows me?"</span>
+
+<span class="c">-- Redis feed (sorted set by timestamp)</span>
+feed:{userId} → ZSET[(postId, timestamp)]
+<span class="c">-- Keep only latest 500-1000 posts in cache</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Key Challenges</div>
+          <div class="row"><span class="row-key orange">Hot users</span><span class="row-val">Celebrity posts pulled separately at read time. Don't fanout Beyoncé's post to 100M feeds</span></div>
+          <div class="row"><span class="row-key orange">Feed freshness</span><span class="row-val">Redis list capped at N posts. Older posts fetched from DB on scroll (cursor pagination)</span></div>
+          <div class="row"><span class="row-key orange">Ranking</span><span class="row-val">Chronological first. ML ranking: separate service that reranks top-N posts by engagement score</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT SYSTEM -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">04</div>
+      <div>
+        <div class="problem-title">Chat System (WhatsApp / Slack)</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Real-time messaging with persistence and delivery guarantees</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-blue">WebSocket</span>
+        <span class="tag tag-purple">Queue</span>
+        <span class="tag tag-orange">Storage</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Architecture</div>
+          <div class="flow">
+            <span class="flow-node">Client A</span><span class="arrow">⇌</span>
+            <span class="flow-node highlight">Chat Server</span><span class="arrow">→</span>
+            <span class="flow-node highlight-p">Kafka</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight-p">Kafka</span><span class="arrow">→</span>
+            <span class="flow-node">Delivery Service</span><span class="arrow">→</span>
+            <span class="flow-node highlight">Chat Server B</span><span class="arrow">⇌</span>
+            <span class="flow-node">Client B</span>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Protocol Choice</div>
+          <div class="row"><span class="row-key">WebSocket</span><span class="row-val">Bi-directional, persistent. Best for real-time chat. Client and server can both push messages</span></div>
+          <div class="row"><span class="row-key">Long Polling</span><span class="row-val">Fallback. Client holds open HTTP request until message arrives. Higher latency, simpler infra</span></div>
+          <div class="row"><span class="row-key">SSE</span><span class="row-val">Server → Client only. Good for notifications, not for chat (need bidirectional)</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Message States</div>
+          <div class="pill-list">
+            <span class="pill">SENT</span>
+            <span class="pill accent">DELIVERED</span>
+            <span class="pill green">READ</span>
+            <span class="pill orange">FAILED</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Key Design Decisions</div>
+          <div class="row"><span class="row-key orange">Message ID</span><span class="row-val">Globally ordered within conversation. Use Snowflake or DB sequence. Client uses ID for dedup</span></div>
+          <div class="row"><span class="row-key orange">User presence</span><span class="row-val">Store last_seen in Redis with 30s heartbeat from client. Expire after 60s = offline</span></div>
+          <div class="row"><span class="row-key orange">Offline users</span><span class="row-val">Store undelivered messages in DB. On reconnect, fetch messages with ID > last_ack_id</span></div>
+          <div class="row"><span class="row-key orange">Group chat</span><span class="row-val">Fan out to each member. For large groups (Slack channels): store once, each user tracks read_cursor</span></div>
+          <div class="row"><span class="row-key orange">Media files</span><span class="row-val">Upload to S3. Store URL in message. Use pre-signed URLs. CDN for delivery</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Storage</div>
+          <div class="code">messages(id BIGINT, conversation_id,
+         sender_id, content TEXT,
+         status, created_at, media_url)
+<span class="c">-- Partition by conversation_id</span>
+<span class="c">-- Archive old messages to cold storage</span>
+
+<span class="c">-- Redis: active WebSocket connections</span>
+user_socket:{userId} → {serverId, socketId}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION SYSTEM -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">05</div>
+      <div>
+        <div class="problem-title">Notification System</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Push/email/SMS delivery at scale with reliability</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-purple">Async</span>
+        <span class="tag tag-orange">Queue</span>
+        <span class="tag tag-yellow">Retry</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Architecture</div>
+          <div class="flow">
+            <span class="flow-node">Trigger Event</span><span class="arrow">→</span>
+            <span class="flow-node highlight">Notification Service</span><span class="arrow">→</span>
+            <span class="flow-node highlight-p">Kafka</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight-p">Kafka</span><span class="arrow">→</span>
+            <span class="flow-node">Email Worker</span><span class="arrow">→</span>
+            <span class="flow-node">SendGrid</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight-p">Kafka</span><span class="arrow">→</span>
+            <span class="flow-node">Push Worker</span><span class="arrow">→</span>
+            <span class="flow-node">APNS / FCM</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight-p">Kafka</span><span class="arrow">→</span>
+            <span class="flow-node">SMS Worker</span><span class="arrow">→</span>
+            <span class="flow-node">Twilio</span>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Key Properties</div>
+          <div class="row"><span class="row-key">Idempotency</span><span class="row-val">Each notification has unique ID. Workers check DB before sending to prevent duplicates on retry</span></div>
+          <div class="row"><span class="row-key">Priority</span><span class="row-val">Separate Kafka topics: critical (OTP, security alerts) vs normal (marketing). Critical = smaller, faster queue</span></div>
+          <div class="row"><span class="row-key">Preferences</span><span class="row-val">User stores channel preferences. Check before sending: user.email_enabled, user.push_enabled</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Retry & Reliability</div>
+          <div class="row"><span class="row-key orange">Retry strategy</span><span class="row-val">Exponential backoff: 1s, 2s, 4s, 8s... Max 5 retries. Dead letter queue for failures</span></div>
+          <div class="row"><span class="row-key orange">Delivery tracking</span><span class="row-val">Store delivery status in DB: PENDING → SENT → DELIVERED/FAILED. Webhook from provider updates status</span></div>
+          <div class="row"><span class="row-key orange">Rate limiting</span><span class="row-val">Per-user: max 10 notifications/hour. Per-provider: respect SendGrid/Twilio rate limits</span></div>
+          <div class="row"><span class="row-key orange">Template engine</span><span class="row-val">Separate template service. Supports i18n/localization. Store templates in DB, render at send time</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Schema</div>
+          <div class="code">notifications(id UUID, user_id, channel,
+  template_id, payload JSONB,
+  status, attempts INT,
+  created_at, sent_at, error_msg)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH AUTOCOMPLETE -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">06</div>
+      <div>
+        <div class="problem-title">Search Autocomplete / Typeahead</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Fast prefix suggestions at &lt;100ms p99</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-green">Trie</span>
+        <span class="tag tag-blue">Cache</span>
+        <span class="tag tag-orange">Ranking</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Data Structure Options</div>
+          <div class="row"><span class="row-key">Trie</span><span class="row-val">Prefix tree. O(p) lookup (p=prefix length). Store top-K suggestions at each node. Memory intensive</span></div>
+          <div class="row"><span class="row-key green">Redis ZSET ✓</span><span class="row-val">Store (suggestion, score) in sorted set. Range query by lex prefix. Simple, scalable, fast</span></div>
+          <div class="row"><span class="row-key">Elasticsearch</span><span class="row-val">completion suggester. Best for complex use cases with NLP, fuzzy matching. Higher latency</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Flow</div>
+          <div class="flow">
+            <span class="flow-node">User types "ap"</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">Redis ZSET</span><span class="arrow">→</span>
+            <span class="flow-node">top 5 results</span>
+          </div>
+          <div class="code" style="margin-top:6px;"><span class="c">-- Redis sorted set with lex scoring</span>
+ZADD suggestions 0 "apple"
+ZADD suggestions 0 "appetizer"
+ZADD suggestions 0 "app"
+
+<span class="c">-- Query prefix "ap"</span>
+ZRANGEBYLEX suggestions "[ap" "[ap\xff" LIMIT 0 5
+
+<span class="c">-- Score = -frequency (negative for desc order)</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Ranking & Updates</div>
+          <div class="row"><span class="row-key orange">Score</span><span class="row-val">Combine: search_frequency × recency_weight × personalization_boost</span></div>
+          <div class="row"><span class="row-key orange">Update pipeline</span><span class="row-val">Log all searches to Kafka → Spark batch job computes top-K per prefix daily → update Redis</span></div>
+          <div class="row"><span class="row-key orange">Personalization</span><span class="row-val">User's recent searches stored in Redis. Merge global + personal results, deduplicate</span></div>
+          <div class="row"><span class="row-key orange">Filtering</span><span class="row-val">Block offensive suggestions. Maintain blocklist. Filter at serving layer, not storage layer</span></div>
+        </div>
+        <div class="tip-box">💡 Debounce on client side (300ms) to avoid hitting API on every keystroke. CDN can cache popular prefix results.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT SYSTEM -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">07</div>
+      <div>
+        <div class="problem-title">Payment System</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Reliable, idempotent financial transaction processing</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-red">Consistency</span>
+        <span class="tag tag-orange">Idempotency</span>
+        <span class="tag tag-blue">ACID</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Flow</div>
+          <div class="flow">
+            <span class="flow-node">Client</span><span class="arrow">→</span>
+            <span class="flow-node highlight">Payment API</span><span class="arrow">→</span>
+            <span class="flow-node highlight-o">PSP</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight-o">PSP</span><span class="arrow">→</span>
+            <span class="flow-node">Webhook</span><span class="arrow">→</span>
+            <span class="flow-node highlight">Payment API</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">DB update</span>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Critical Properties</div>
+          <div class="row"><span class="row-key">Idempotency</span><span class="row-val">Client sends idempotency_key (UUID). Server checks if key already processed → return cached result. Never charge twice</span></div>
+          <div class="row"><span class="row-key">Consistency</span><span class="row-val">Use DB transactions for: deduct balance + create transaction record atomically. NEVER partial updates</span></div>
+          <div class="row"><span class="row-key">Audit log</span><span class="row-val">Append-only ledger. Every state change recorded. Never UPDATE transactions, only INSERT new entries</span></div>
+          <div class="row"><span class="row-key">Reconciliation</span><span class="row-val">Daily job: compare our DB vs PSP records. Flag discrepancies. Essential for financial compliance</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Schema</div>
+          <div class="code">payments(id UUID PK,
+  idempotency_key VARCHAR UNIQUE,
+  amount BIGINT,  <span class="c">← store in cents, not float!</span>
+  currency CHAR(3),
+  status ENUM(PENDING,SUCCESS,FAILED),
+  psp_reference VARCHAR,
+  created_at, updated_at)
+
+ledger(id, payment_id,
+  debit_account, credit_account,
+  amount, created_at)  <span class="c">← immutable</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Failure Handling</div>
+          <div class="row"><span class="row-key orange">Timeout</span><span class="row-val">PSP call timed out → status stays PENDING. Background job retries with same idempotency_key</span></div>
+          <div class="row"><span class="row-key orange">Webhook retry</span><span class="row-val">PSP retries webhooks. Must be idempotent. Check status before processing duplicate webhook</span></div>
+          <div class="row"><span class="row-key orange">Refunds</span><span class="row-val">Create new REFUND transaction. Insert reversal entries in ledger. Call PSP refund API</span></div>
+        </div>
+        <div class="warn-box">⚠ NEVER store card numbers. Use PSP token (Stripe PaymentMethod). PCI-DSS compliance required.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEB CRAWLER -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">08</div>
+      <div>
+        <div class="problem-title">Web Crawler / Search Indexer</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Distributed crawling with dedup and politeness</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-purple">Distributed</span>
+        <span class="tag tag-blue">Queue</span>
+        <span class="tag tag-green">Bloom Filter</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Architecture</div>
+          <div class="flow">
+            <span class="flow-node">Seed URLs</span><span class="arrow">→</span>
+            <span class="flow-node highlight-p">URL Queue</span><span class="arrow">→</span>
+            <span class="flow-node highlight">Crawler Workers</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight">Crawler</span><span class="arrow">→</span>
+            <span class="flow-node">Parse HTML</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">Content Store</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node">New URLs</span><span class="arrow">→</span>
+            <span class="flow-node highlight-o">Bloom Filter</span><span class="arrow">→</span>
+            <span class="flow-node">URL Queue</span>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Key Components</div>
+          <div class="row"><span class="row-key">URL dedup</span><span class="row-val">Bloom filter for fast probabilistic check. If "maybe seen" → check DB. Bloom filter = 1 bit per URL</span></div>
+          <div class="row"><span class="row-key">Politeness</span><span class="row-val">robots.txt compliance. Per-domain rate limiting. Respect Crawl-delay header. Never overload a single domain</span></div>
+          <div class="row"><span class="row-key">Content dedup</span><span class="row-val">SimHash of page content. Similar hashes (hamming distance &lt;3) = near-duplicate. Skip re-indexing</span></div>
+          <div class="row"><span class="row-key">Priority queue</span><span class="row-val">Higher priority: sitemaps, fresh content, high PageRank pages. Lower priority: deep links, low traffic</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Scale & Storage</div>
+          <div class="row"><span class="row-key orange">URL frontier</span><span class="row-val">Priority queue backed by Kafka or Redis sorted set. Partition by domain for politeness control</span></div>
+          <div class="row"><span class="row-key orange">Raw content</span><span class="row-val">Store HTML in S3/object store. Store metadata (URL, crawl time, status) in DB</span></div>
+          <div class="row"><span class="row-key orange">Indexing</span><span class="row-val">Separate indexing pipeline: raw HTML → parser → tokenizer → inverted index update (Elasticsearch)</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Schema</div>
+          <div class="code">urls(id, url VARCHAR UNIQUE, status,
+  priority INT, last_crawled_at,
+  content_hash VARCHAR, domain)
+
+<span class="c">-- Bloom filter in Redis for fast dedup</span>
+<span class="c">-- S3 for raw HTML content</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO STREAMING -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">09</div>
+      <div>
+        <div class="problem-title">Video Streaming (YouTube / Netflix)</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Upload, transcode, and deliver video at massive scale</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-orange">CDN</span>
+        <span class="tag tag-purple">Async</span>
+        <span class="tag tag-blue">Storage</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Upload Flow</div>
+          <div class="flow">
+            <span class="flow-node">Client</span><span class="arrow">→</span>
+            <span class="flow-node highlight">Upload Service</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">S3 (raw)</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight-g">S3 (raw)</span><span class="arrow">→</span>
+            <span class="flow-node highlight-p">event trigger</span><span class="arrow">→</span>
+            <span class="flow-node highlight-o">Transcoding Farm</span>
+          </div>
+          <div class="flow" style="margin-top:4px;">
+            <span class="flow-node highlight-o">Transcoded</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">S3 (processed)</span><span class="arrow">→</span>
+            <span class="flow-node">CDN Edge</span>
+          </div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Streaming Flow</div>
+          <div class="flow">
+            <span class="flow-node">Client</span><span class="arrow">→</span>
+            <span class="flow-node">CDN Edge</span><span class="arrow">→</span>
+            <span class="flow-node highlight-g">S3 (if cache miss)</span>
+          </div>
+          <div class="tip-box">Adaptive Bitrate Streaming (HLS/DASH): Player selects quality based on bandwidth. Video split into 2-10s segments.</div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Transcoding</div>
+          <div class="row"><span class="row-key orange">Formats</span><span class="row-val">Generate: 360p, 480p, 720p, 1080p, 4K. Multiple codecs: H.264 (compat) + H.265 (efficiency)</span></div>
+          <div class="row"><span class="row-key orange">DAG pipeline</span><span class="row-val">Parallel transcoding workers. Split video into segments, transcode in parallel, reassemble</span></div>
+          <div class="row"><span class="row-key orange">Thumbnails</span><span class="row-val">Extract frames at intervals. Store in S3. Auto-generate preview on hover (sprite sheets)</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Key Numbers</div>
+          <div class="stat-grid">
+            <div class="stat"><div class="stat-val">2-10s</div><div class="stat-label">HLS segment</div></div>
+            <div class="stat"><div class="stat-val">5MB/s</div><div class="stat-label">1080p bitrate</div></div>
+            <div class="stat"><div class="stat-val">95%</div><div class="stat-label">CDN cache rate</div></div>
+            <div class="stat"><div class="stat-val">3x</div><div class="stat-label">storage overhead</div></div>
+          </div>
+        </div>
+        <div class="row"><span class="row-key orange">Upload size</span><span class="row-val">Use multipart upload (S3). Client-side chunking (5-10MB chunks). Resume on failure</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISTRIBUTED CACHE -->
+  <div class="problem-card">
+    <div class="problem-header" onclick="toggleProblem(this)">
+      <div class="problem-number">10</div>
+      <div>
+        <div class="problem-title">Distributed Cache (Redis)</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:2px;">Caching strategies, patterns, and failure modes</div>
+      </div>
+      <div class="problem-tags">
+        <span class="tag tag-green">Cache</span>
+        <span class="tag tag-blue">Patterns</span>
+        <span class="tag tag-red">Failures</span>
+        <span class="chevron">▶</span>
+      </div>
+    </div>
+    <div class="problem-body">
+      <div>
+        <div class="psec">
+          <div class="psec-title">Cache Strategies</div>
+          <table class="tradeoff">
+            <tr><th>Strategy</th><th>Write Flow</th><th>Use When</th></tr>
+            <tr><td>Cache-aside</td><td>App writes DB, invalidates cache. Read: check cache → DB → populate</td><td>Most common. Flexible. Cache only what's read</td></tr>
+            <tr><td>Write-through</td><td>App writes cache AND DB synchronously</td><td>Read-heavy. Ensures consistency. Double write latency</td></tr>
+            <tr><td>Write-behind</td><td>App writes cache. Async DB write</td><td>Write-heavy. Risk: data loss if cache fails before DB write</td></tr>
+            <tr><td>Read-through</td><td>Cache fetches from DB on miss automatically</td><td>Simplifies app code. Cache layer handles DB interaction</td></tr>
+          </table>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Failure Modes</div>
+          <div class="warn-box">⚠ Cache Avalanche: many keys expire simultaneously → DB overwhelmed. Fix: random jitter on TTL.</div>
+          <div class="warn-box">⚠ Cache Stampede: hot key expires → many concurrent requests hit DB. Fix: probabilistic early refresh or mutex lock on cache miss.</div>
+          <div class="warn-box">⚠ Cache Penetration: request for non-existent key always hits DB. Fix: cache null values with short TTL, or Bloom filter.</div>
+        </div>
+      </div>
+      <div>
+        <div class="psec">
+          <div class="psec-title">Redis Data Structures</div>
+          <div class="row"><span class="row-key">String</span><span class="row-val">Simple cache, counters, rate limiting. GET/SET. O(1)</span></div>
+          <div class="row"><span class="row-key">Hash</span><span class="row-val">Object storage (user profile fields). HGET/HSET. Efficient for partial updates</span></div>
+          <div class="row"><span class="row-key">Sorted Set</span><span class="row-val">Leaderboards, feed ranking, rate limiting. ZADD/ZRANGE. O(log N)</span></div>
+          <div class="row"><span class="row-key">List</span><span class="row-val">Message queues, activity feeds. LPUSH/RPOP. O(1) for head/tail</span></div>
+          <div class="row"><span class="row-key">Set</span><span class="row-val">Unique visitors, tags, friend lists. SADD/SISMEMBER. O(1) average</span></div>
+          <div class="row"><span class="row-key">Pub/Sub</span><span class="row-val">Real-time notifications. Not persistent. If subscriber offline → message lost</span></div>
+        </div>
+        <div class="psec">
+          <div class="psec-title">Eviction Policies</div>
+          <div class="pill-list">
+            <span class="pill accent">allkeys-lru ✓</span>
+            <span class="pill">volatile-lru</span>
+            <span class="pill">allkeys-lfu</span>
+            <span class="pill">volatile-ttl</span>
+            <span class="pill orange">noeviction</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:5px;">Use allkeys-lru for general cache. noeviction = returns error when full (bad for cache).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE 2: COMPONENTS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="components" class="page">
+
+  <div class="section-title">Core Component Patterns</div>
+
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-blue"></div><div class="card-title">Load Balancers</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Algorithm</th><th>Best For</th></tr>
+          <tr><td>Round Robin</td><td>Stateless services, uniform requests</td></tr>
+          <tr><td>Least Connections</td><td>Variable request duration (chat, streaming)</td></tr>
+          <tr><td>IP Hash</td><td>Sticky sessions (use Redis instead when possible)</td></tr>
+          <tr><td>Weighted RR</td><td>Heterogeneous servers (different capacities)</td></tr>
+          <tr><td>Random</td><td>Simple, surprisingly effective at scale</td></tr>
+        </table>
+        <div style="margin-top:8px;">
+          <div class="row"><span class="row-key">L4 (TCP/UDP)</span><span class="row-val">Fast, no content inspection. AWS NLB. Use for non-HTTP.</span></div>
+          <div class="row"><span class="row-key">L7 (HTTP)</span><span class="row-val">Content-aware routing (path, headers). AWS ALB, Nginx. Use for APIs.</span></div>
+          <div class="row"><span class="row-key">Health checks</span><span class="row-val">Active: LB polls /health. Passive: LB monitors error rates. Remove unhealthy nodes.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-purple"></div><div class="card-title">Message Queues</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>System</th><th>Characteristics</th></tr>
+          <tr><td>Kafka</td><td>High throughput, persistent, replay, partitioned. Event streaming. Retain forever.</td></tr>
+          <tr><td>RabbitMQ</td><td>Task queues, routing, dead-letter queues. AMQP. Messages deleted after consume.</td></tr>
+          <tr><td>SQS</td><td>Managed, at-least-once delivery, visibility timeout. Simple. AWS-native.</td></tr>
+          <tr><td>Redis Streams</td><td>Lightweight. Consumer groups. Good for simple event streaming.</td></tr>
+        </table>
+        <div style="margin-top:8px;">
+          <div class="row"><span class="row-key orange">At-least-once</span><span class="row-val">Message delivered ≥1 times. Consumer must be idempotent.</span></div>
+          <div class="row"><span class="row-key orange">At-most-once</span><span class="row-val">May lose messages. Fast. Use for non-critical events (analytics).</span></div>
+          <div class="row"><span class="row-key orange">Exactly-once</span><span class="row-val">Hard. Kafka transactions + idempotent producer. Very expensive.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-orange"></div><div class="card-title">CDN Patterns</div></div>
+      <div class="card-body">
+        <div class="row"><span class="row-key">Push CDN</span><span class="row-val">You upload content to CDN proactively. Good for small, rarely updated files.</span></div>
+        <div class="row"><span class="row-key">Pull CDN</span><span class="row-val">CDN fetches from origin on cache miss. Auto-populates. Most common (Cloudflare, CloudFront).</span></div>
+        <div class="row"><span class="row-key orange">Cache-Control</span><span class="row-val">max-age=86400 (1 day). stale-while-revalidate. CDN respects these headers.</span></div>
+        <div class="row"><span class="row-key orange">Invalidation</span><span class="row-val">URL versioning (/v2/app.js) preferred over purge API (eventual, expensive).</span></div>
+        <div class="row"><span class="row-key orange">What to CDN</span><span class="row-val">Static assets, images, video segments, public API responses. NOT: auth endpoints, personalized data.</span></div>
+        <div class="tip-box" style="margin-top:8px;">💡 CDN at edge = 50-300ms latency reduction. Cache hit rate 80-95% for well-configured static sites.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-green"></div><div class="card-title">API Gateway</div></div>
+      <div class="card-body">
+        <div class="row"><span class="row-key">Responsibilities</span><span class="row-val">Auth, Rate limiting, Request routing, SSL termination, Load balancing, API versioning</span></div>
+        <div class="row"><span class="row-key">Aggregation</span><span class="row-val">BFF (Backend-for-Frontend): gateway combines calls from multiple services. One client request → multiple service calls</span></div>
+        <div class="row"><span class="row-key green">Circuit Breaker</span><span class="row-val">CLOSED (normal) → OPEN (failing, fast-fail) → HALF-OPEN (probe). Prevents cascade failures.</span></div>
+        <div class="row"><span class="row-key green">Retry policy</span><span class="row-val">Only retry idempotent ops (GET, PUT). Exponential backoff + jitter. Max 3 retries.</span></div>
+        <div class="row"><span class="row-key green">Timeout</span><span class="row-val">Always set. Downstream timeout < upstream timeout. Fail fast, don't queue forever.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-yellow"></div><div class="card-title">Service Communication</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Pattern</th><th>When</th></tr>
+          <tr><td>Sync REST/gRPC</td><td>Real-time response needed. Query/response semantics.</td></tr>
+          <tr><td>Async Events</td><td>Fire-and-forget. Decouple services. Long-running tasks.</td></tr>
+          <tr><td>Saga Pattern</td><td>Distributed transactions. Sequence of local transactions with compensating actions on failure.</td></tr>
+          <tr><td>Event Sourcing</td><td>Audit trail. Replay capability. State = sequence of events.</td></tr>
+          <tr><td>CQRS</td><td>Separate read/write models. Optimize reads independently. Adds complexity.</td></tr>
+        </table>
+        <div class="warn-box" style="margin-top:8px;">⚠ 2PC (Two-Phase Commit) = distributed ACID but blocking. Avoid in microservices. Use Saga instead.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-red"></div><div class="card-title">ID Generation Strategies</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Strategy</th><th>Properties</th></tr>
+          <tr><td>UUID v4</td><td>Random. No coordination needed. Not sortable. 36 chars. Index fragmentation.</td></tr>
+          <tr><td>UUID v7</td><td>Time-ordered UUID. Sortable. Better index performance. Newer standard.</td></tr>
+          <tr><td>Snowflake</td><td>64-bit: timestamp(41b) + datacenter(5b) + worker(5b) + seq(12b). Sortable, fast, distributed.</td></tr>
+          <tr><td>ULID</td><td>Snowflake alternative. URL-safe, monotonic within millisecond.</td></tr>
+          <tr><td>DB Sequence</td><td>Simple. Single point. Good for single-DB setups. Not for distributed.</td></tr>
+        </table>
+        <div class="formula">Snowflake: ~4096 IDs/ms/worker · 1023 workers · 69 years before overflow</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE 3: DATABASES -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="databases" class="page">
+
+  <div class="section-title">Database Selection & Patterns</div>
+
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-blue"></div><div class="card-title">SQL vs NoSQL Decision</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Use SQL When</th><th>Use NoSQL When</th></tr>
+          <tr><td class="good">Complex relationships, joins needed</td><td class="good">Flexible/evolving schema</td></tr>
+          <tr><td class="good">ACID transactions required</td><td class="good">Horizontal scale needed</td></tr>
+          <tr><td class="good">Financial data, strong consistency</td><td class="good">High write throughput</td></tr>
+          <tr><td class="good">Structured, normalized data</td><td class="good">Unstructured / document data</td></tr>
+          <tr><td class="warn">Vertical scale (mostly)</td><td class="warn">Eventual consistency acceptable</td></tr>
+        </table>
+        <div style="margin-top:8px;">
+          <div class="row"><span class="row-key">ACID</span><span class="row-val">Atomicity, Consistency, Isolation, Durability. Guaranteed in SQL. Partial in some NoSQL.</span></div>
+          <div class="row"><span class="row-key orange">CAP Theorem</span><span class="row-val">Pick 2: Consistency, Availability, Partition Tolerance. P always happens → choose C or A.</span></div>
+          <div class="row"><span class="row-key orange">CP systems</span><span class="row-val">PostgreSQL, HBase, Zookeeper. Consistent but may be unavailable during partition.</span></div>
+          <div class="row"><span class="row-key orange">AP systems</span><span class="row-val">Cassandra, DynamoDB, CouchDB. Always available, eventually consistent.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-orange"></div><div class="card-title">NoSQL Flavors</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Type</th><th>Examples</th><th>Use Case</th></tr>
+          <tr><td>Document</td><td>MongoDB, Firestore</td><td>Catalogs, CMS, user profiles. JSON-like documents.</td></tr>
+          <tr><td>Key-Value</td><td>Redis, DynamoDB</td><td>Session cache, preferences. O(1) lookup.</td></tr>
+          <tr><td>Wide-Column</td><td>Cassandra, HBase</td><td>Time-series, IoT, write-heavy. Partition key critical.</td></tr>
+          <tr><td>Graph</td><td>Neo4j, Neptune</td><td>Social networks, recommendations, fraud detection.</td></tr>
+          <tr><td>Time-Series</td><td>InfluxDB, TimescaleDB</td><td>Metrics, monitoring, IoT sensor data.</td></tr>
+          <tr><td>Search</td><td>Elasticsearch</td><td>Full-text search, autocomplete, log analysis.</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-green"></div><div class="card-title">Database Scaling Patterns</div></div>
+      <div class="card-body">
+        <div class="row"><span class="row-key">Vertical</span><span class="row-val">Bigger machine. Fast, no code change. Hard limit. SPOF. Do this first.</span></div>
+        <div class="row"><span class="row-key green">Read Replicas</span><span class="row-val">Async replication to replicas. Direct reads there. Replica lag = eventual consistency. Scale reads 10x.</span></div>
+        <div class="row"><span class="row-key green">Sharding</span><span class="row-val">Partition data horizontally across nodes. Shard key is critical. Bad key = hotspot. Cross-shard joins = hard.</span></div>
+        <div class="row"><span class="row-key orange">Shard Key</span><span class="row-val">Choose for even distribution. user_id (good) vs country (skewed). Hash sharding vs range sharding.</span></div>
+        <div class="row"><span class="row-key orange">Federation</span><span class="row-val">Split by function: users DB, orders DB, products DB. Removes single large DB bottleneck.</span></div>
+        <div class="tip-box" style="margin-top:8px;">💡 Order: Caching → Read replicas → Vertical scale → Federation → Sharding</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-purple"></div><div class="card-title">Indexing Strategy</div></div>
+      <div class="card-body">
+        <div class="row"><span class="row-key">B-Tree index</span><span class="row-val">Default. Range queries, equality, ORDER BY. Column cardinality matters. High cardinality = better.</span></div>
+        <div class="row"><span class="row-key">Hash index</span><span class="row-val">Equality only (=). Faster than B-Tree for exact match. No range queries.</span></div>
+        <div class="row"><span class="row-key">Composite</span><span class="row-val">Multi-column: (user_id, created_at). Left-prefix rule: (A,B,C) index helps A, AB, ABC — NOT B or C alone.</span></div>
+        <div class="row"><span class="row-key">Partial index</span><span class="row-val">Index on subset: WHERE status='active'. Smaller, faster. Good for sparse conditions.</span></div>
+        <div class="row"><span class="row-key orange">Cost</span><span class="row-val">Every index = slower writes (update index on insert/update/delete). Index maintenance overhead.</span></div>
+        <div class="row"><span class="row-key orange">Covering index</span><span class="row-val">Include all SELECT columns in index. Query returns from index only. No table read needed.</span></div>
+        <div class="warn-box" style="margin-top:8px;">⚠ Don't index low-cardinality columns (boolean, gender). Index selectivity = distinct/total. Target >0.1.</div>
+      </div>
+    </div>
+
+    <div class="card col-span-2">
+      <div class="card-header"><div class="dot dot-yellow"></div><div class="card-title">Database Consistency Patterns</div></div>
+      <div class="card-body">
+        <div class="grid-3" style="gap:8px;">
+          <div>
+            <div class="psec-title">Consistency Levels</div>
+            <div class="row"><span class="row-key">Strong</span><span class="row-val">Read always returns latest write. SQL default. Higher latency.</span></div>
+            <div class="row"><span class="row-key orange">Eventual</span><span class="row-val">Writes propagate async. Reads may be stale. Higher availability. Cassandra default.</span></div>
+            <div class="row"><span class="row-key purple" style="color:var(--accent4)">Read-your-writes</span><span class="row-val">You always see your own writes. Others may be stale.</span></div>
+            <div class="row"><span class="row-key green">Monotonic reads</span><span class="row-val">Won't see older data after seeing newer. No time travel.</span></div>
+          </div>
+          <div>
+            <div class="psec-title">Transaction Isolation</div>
+            <div class="row"><span class="row-key">Read Uncommitted</span><span class="row-val">Dirty reads. Never use.</span></div>
+            <div class="row"><span class="row-key">Read Committed</span><span class="row-val">No dirty reads. PostgreSQL default. Non-repeatable reads possible.</span></div>
+            <div class="row"><span class="row-key">Repeatable Read</span><span class="row-val">Same query = same result within txn. Phantom reads possible.</span></div>
+            <div class="row"><span class="row-key green">Serializable</span><span class="row-val">Full isolation. Slowest. Use for critical financial ops.</span></div>
+          </div>
+          <div>
+            <div class="psec-title">Replication Modes</div>
+            <div class="row"><span class="row-key">Sync replication</span><span class="row-val">Write ACKed only after replica confirms. Strong consistency. Higher write latency.</span></div>
+            <div class="row"><span class="row-key orange">Async replication</span><span class="row-val">Write ACKed immediately. Replica may lag. Risk: data loss if master fails before replica syncs.</span></div>
+            <div class="row"><span class="row-key green">Semi-sync</span><span class="row-val">Wait for at least 1 replica. Balance: durability vs latency. MySQL semi-sync.</span></div>
+            <div class="row"><span class="row-key">Quorum writes</span><span class="row-val">Write to W of N nodes. W + R > N = strong consistency. Cassandra tunable.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE 4: NUMBERS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="numbers" class="page">
+
+  <div class="section-title">Numbers Every Engineer Should Know</div>
+
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-blue"></div><div class="card-title">Latency Numbers (2024)</div></div>
+      <div class="card-body">
+        <table class="ref-table">
+          <tr><th>Operation</th><th>Latency</th><th>Note</th></tr>
+          <tr><td>L1 cache</td><td>0.5 ns</td><td>CPU on-die</td></tr>
+          <tr><td>L2 cache</td><td>7 ns</td><td>14× L1</td></tr>
+          <tr><td>RAM access</td><td>100 ns</td><td>200× L1</td></tr>
+          <tr><td>SSD read</td><td>100 µs</td><td>1,000× RAM</td></tr>
+          <tr><td>HDD seek</td><td>10 ms</td><td>100× SSD</td></tr>
+          <tr><td>Intra-DC network</td><td>0.5 ms</td><td>same region</td></tr>
+          <tr><td>Cross-DC network</td><td>150 ms</td><td>US coast-coast</td></tr>
+          <tr><td>Redis get</td><td>~0.5 ms</td><td>network + lookup</td></tr>
+          <tr><td>PostgreSQL indexed</td><td>1-5 ms</td><td>hot cache</td></tr>
+          <tr><td>PostgreSQL scan</td><td>100ms-10s</td><td>depends on size</td></tr>
+          <tr><td>S3 GET</td><td>20-100 ms</td><td>same region</td></tr>
+          <tr><td>APNS/FCM push</td><td>100-3000 ms</td><td>delivery varies</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-orange"></div><div class="card-title">Scale Estimation Cheatsheet</div></div>
+      <div class="card-body">
+        <div class="psec-title">Request Rate → Peak</div>
+        <table class="ref-table">
+          <tr><th>Users/Day</th><th>Avg RPS</th><th>Peak (3×)</th></tr>
+          <tr><td>1M DAU</td><td>~12</td><td>~36</td></tr>
+          <tr><td>10M DAU</td><td>~120</td><td>~360</td></tr>
+          <tr><td>100M DAU</td><td>~1,200</td><td>~3,600</td></tr>
+          <tr><td>1B DAU</td><td>~12,000</td><td>~36,000</td></tr>
+        </table>
+        <div class="psec-title" style="margin-top:10px;">Storage Estimation</div>
+        <table class="ref-table">
+          <tr><th>Item</th><th>Approx Size</th></tr>
+          <tr><td>Tweet / short text</td><td>300 bytes</td></tr>
+          <tr><td>User profile row</td><td>1-2 KB</td></tr>
+          <tr><td>Photo (compressed)</td><td>300 KB</td></tr>
+          <tr><td>1 min video (360p)</td><td>10 MB</td></tr>
+          <tr><td>1 min video (1080p)</td><td>150 MB</td></tr>
+          <tr><td>Log line (structured)</td><td>500 bytes</td></tr>
+        </table>
+        <div class="formula" style="margin-top:8px;">Storage = items/day × size × retention_days × replication_factor</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-green"></div><div class="card-title">Capacity Planning</div></div>
+      <div class="card-body">
+        <div class="psec-title">Throughput Baselines</div>
+        <table class="ref-table">
+          <tr><th>System</th><th>Ballpark Throughput</th></tr>
+          <tr><td>PostgreSQL (OLTP)</td><td>1,000-5,000 TPS per node</td></tr>
+          <tr><td>MySQL</td><td>1,000-10,000 TPS per node</td></tr>
+          <tr><td>Redis</td><td>100,000+ ops/sec single thread</td></tr>
+          <tr><td>Kafka</td><td>100MB/s per broker (millions/s msgs)</td></tr>
+          <tr><td>Cassandra</td><td>tens of thousands writes/sec/node</td></tr>
+          <tr><td>Nginx</td><td>10,000+ req/sec single instance</td></tr>
+          <tr><td>Single service (Go/Java)</td><td>1,000-10,000 RPS (dep. on logic)</td></tr>
+        </table>
+        <div class="tip-box" style="margin-top:8px;">💡 In interviews: assume 10% of users active at peak. 10% of requests are writes. 90% are reads.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-yellow"></div><div class="card-title">SLA / SLO Reference</div></div>
+      <div class="card-body">
+        <div class="psec-title">Nines of Availability</div>
+        <table class="ref-table">
+          <tr><th>SLA</th><th>Downtime/Year</th><th>Downtime/Month</th></tr>
+          <tr><td>99% (2 nines)</td><td>3.65 days</td><td>7.2 hours</td></tr>
+          <tr><td>99.9% (3 nines)</td><td>8.76 hours</td><td>43.8 min</td></tr>
+          <tr><td>99.99% (4 nines)</td><td>52.6 min</td><td>4.38 min</td></tr>
+          <tr><td>99.999% (5 nines)</td><td>5.26 min</td><td>26.3 sec</td></tr>
+        </table>
+        <div class="psec-title" style="margin-top:10px;">SLA Composition</div>
+        <div class="formula">Composite SLA = SLA_A × SLA_B × SLA_C</div>
+        <div style="font-size:10px;color:var(--text-dim);margin:4px 0;">3 services at 99.9% each → 99.7% composite. Use redundancy!</div>
+        <div class="row" style="margin-top:6px;"><span class="row-key orange">SLO</span><span class="row-val">Internal target (stricter than SLA). "p99 latency &lt;200ms". Alert at 80% of error budget.</span></div>
+        <div class="row"><span class="row-key orange">Error budget</span><span class="row-val">1 - SLO. If 99.9%, budget = 0.1% = 43.8 min/month. Deploy only if budget allows.</span></div>
+      </div>
+    </div>
+
+    <div class="card col-span-2">
+      <div class="card-header"><div class="dot dot-red"></div><div class="card-title">Quick Estimation Template</div></div>
+      <div class="card-body">
+        <div class="grid-3" style="gap:12px;">
+          <div>
+            <div class="psec-title">Step 1: Establish Scale</div>
+            <div class="code" style="margin:0;">DAU = ?
+Reads/user/day = ?
+Writes/user/day = ?
+
+Read QPS = DAU × reads / 86400
+Write QPS = DAU × writes / 86400
+Peak = avg × 2-5x</div>
+          </div>
+          <div>
+            <div class="psec-title">Step 2: Storage</div>
+            <div class="code" style="margin:0;">Writes/day = Write_QPS × 86400
+Item_size = ? bytes
+
+Daily_storage = Writes/day × size
+5yr_storage = Daily × 365 × 5
+             × replication_factor (3x)
+Compressed: × 0.2-0.5</div>
+          </div>
+          <div>
+            <div class="psec-title">Step 3: Bandwidth</div>
+            <div class="code" style="margin:0;">Read_bandwidth =
+  Read_QPS × avg_response_size
+
+Write_bandwidth =
+  Write_QPS × avg_request_size
+
+Peak_bw = avg × 2-3x
+
+CDN offload ~80-95% of reads</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE 5: TRADE-OFFS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="tradeoffs" class="page">
+
+  <div class="section-title">Key Trade-offs & Decision Frameworks</div>
+
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-blue"></div><div class="card-title">Consistency vs Availability</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Scenario</th><th>Choose</th><th>Why</th></tr>
+          <tr><td>Bank transfers, payments</td><td class="good">Consistency (CP)</td><td>Can't show wrong balance</td></tr>
+          <tr><td>Social media likes/views</td><td class="warn">Availability (AP)</td><td>~1000 vs ~1001 likes is fine</td></tr>
+          <tr><td>Shopping cart</td><td class="warn">Availability + eventual</td><td>User frustration > stale data</td></tr>
+          <tr><td>Inventory (e-commerce)</td><td class="good">Consistency</td><td>Overselling = costly</td></tr>
+          <tr><td>DNS, CDN</td><td class="warn">Availability</td><td>Must always resolve</td></tr>
+          <tr><td>Distributed lock/leader</td><td class="good">Consistency (CP)</td><td>Only one leader allowed</td></tr>
+          <tr><td>User profile reads</td><td class="warn">Availability</td><td>Stale profile = harmless</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-orange"></div><div class="card-title">SQL vs NoSQL Decision Tree</div></div>
+      <div class="card-body">
+        <div class="code">Need ACID transactions?
+  YES → SQL (PostgreSQL, MySQL)
+
+Need complex joins?
+  YES → SQL
+
+Write throughput > 10K/sec?
+  YES → NoSQL (Cassandra, DynamoDB)
+
+Schema evolving rapidly?
+  YES → Document DB (MongoDB)
+
+Simple key-value lookup?
+  YES → Redis / DynamoDB
+
+Time-series data?
+  YES → InfluxDB / TimescaleDB
+
+Full-text search?
+  YES → Elasticsearch (secondary)
+       Primary store elsewhere
+
+Graph relationships?
+  YES → Neo4j / Amazon Neptune
+
+Unsure? → Start with PostgreSQL</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-green"></div><div class="card-title">Sync vs Async Communication</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Use Sync (REST/gRPC) When</th><th>Use Async (Queue) When</th></tr>
+          <tr><td>Client needs immediate response</td><td>Task can be processed later</td></tr>
+          <tr><td>Simple request-response</td><td>High write throughput needed</td></tr>
+          <tr><td>Real-time data required</td><td>Services should be decoupled</td></tr>
+          <tr><td>Strong consistency needed</td><td>Retry logic needed</td></tr>
+          <tr><td>Low latency critical</td><td>Fan-out to multiple consumers</td></tr>
+        </table>
+        <div style="margin-top:8px;">
+          <div class="row"><span class="row-key green">Hybrid</span><span class="row-val">Sync for query, async for writes. User sees optimistic update, background sync confirms.</span></div>
+          <div class="row"><span class="row-key green">Saga</span><span class="row-val">Async for distributed txns. Each step publishes event. Compensating action on failure.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-purple"></div><div class="card-title">Monolith vs Microservices</div></div>
+      <div class="card-body">
+        <table class="tradeoff">
+          <tr><th>Monolith</th><th>Microservices</th></tr>
+          <tr><td class="good">Simple to develop initially</td><td class="warn">Complex distributed system</td></tr>
+          <tr><td class="good">Easy local development</td><td class="warn">Service discovery, networking</td></tr>
+          <tr><td class="good">Simple transactions</td><td class="warn">No distributed ACID</td></tr>
+          <tr><td class="warn">Hard to scale selectively</td><td class="good">Scale hot services independently</td></tr>
+          <tr><td class="warn">Deploy all-or-nothing</td><td class="good">Independent deployments</td></tr>
+          <tr><td class="warn">Tech stack locked</td><td class="good">Polyglot freedom</td></tr>
+          <tr><td class="warn">Single team bottleneck</td><td class="good">Team autonomy per service</td></tr>
+        </table>
+        <div class="tip-box" style="margin-top:8px;">💡 Start with modular monolith. Extract to microservices only when you feel the pain (team friction, scale bottleneck).</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-yellow"></div><div class="card-title">Push vs Pull Architecture</div></div>
+      <div class="card-body">
+        <div class="row"><span class="row-key">Push</span><span class="row-val">Server sends data to client. WebSocket, SSE, webhooks. Lower latency. Harder to scale (maintain connections).</span></div>
+        <div class="row"><span class="row-key">Pull (Polling)</span><span class="row-val">Client asks server periodically. Simple. Higher latency. Wasteful if no new data. Use Long Polling as middle ground.</span></div>
+        <div class="row"><span class="row-key green">Long Polling</span><span class="row-val">Client holds open connection until event or timeout. Then immediately re-connects. Simpler than WebSocket.</span></div>
+        <div class="row"><span class="row-key green">SSE</span><span class="row-val">Server → Client streaming over HTTP. One-way. Auto-reconnect built in. Good for dashboards, live feeds.</span></div>
+        <div class="row"><span class="row-key">WebSocket</span><span class="row-val">Bi-directional. Persistent. Best for chat, gaming, collaboration. Sticky sessions needed at LB layer.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-red"></div><div class="card-title">Scalability Escalation Path</div></div>
+      <div class="card-body">
+        <div class="code">1. Add caching (Redis)
+   → solve 80% of problems
+
+2. Add CDN
+   → offload static assets + public API
+
+3. Read replicas
+   → scale read-heavy workloads
+
+4. Vertical scaling
+   → buy time before horizontal changes
+
+5. Async processing (queues)
+   → decouple slow operations
+
+6. Horizontal scaling (more instances)
+   → stateless services only
+
+7. Database federation
+   → split by domain/function
+
+8. Sharding
+   → last resort, high complexity
+
+9. Microservices
+   → when teams, not load, is the limit</div>
+        <div class="tip-box" style="margin-top:8px;">💡 In interviews: always go in this order. Don't jump to sharding for a problem caching solves.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE 6: FRAMEWORK -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="framework" class="page">
+
+  <div class="section-title">Interview Framework & Phrases</div>
+
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-blue"></div><div class="card-title">The 45-Minute Structure</div></div>
+      <div class="card-body">
+        <table class="ref-table">
+          <tr><th>Time</th><th>Phase</th><th>Goal</th></tr>
+          <tr><td>0-5 min</td><td>Requirements & Clarifications</td><td>Scope the problem. Ask 5-7 questions.</td></tr>
+          <tr><td>5-10 min</td><td>Scale Estimation</td><td>DAU, QPS, storage. Establishes constraints.</td></tr>
+          <tr><td>10-20 min</td><td>High-Level Design</td><td>Draw major components. Don't over-detail.</td></tr>
+          <tr><td>20-35 min</td><td>Deep Dive</td><td>Pick 2-3 interesting areas. Go deep.</td></tr>
+          <tr><td>35-45 min</td><td>Scale & Edge Cases</td><td>Bottlenecks, failures, improvements.</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-orange"></div><div class="card-title">Clarifying Questions Checklist</div></div>
+      <div class="card-body">
+        <div class="pill-list">
+          <span class="pill accent">Users / DAU?</span>
+          <span class="pill accent">Global or one region?</span>
+          <span class="pill accent">Latency requirement?</span>
+          <span class="pill orange">Read/Write ratio?</span>
+          <span class="pill orange">Mobile / Web / Both?</span>
+          <span class="pill orange">Is real-time needed?</span>
+          <span class="pill green">Data retention?</span>
+          <span class="pill green">Consistency model OK?</span>
+          <span class="pill green">Existing systems?</span>
+          <span class="pill purple">Authentication needed?</span>
+          <span class="pill purple">Budget constraints?</span>
+          <span class="pill yellow">Feature completeness?</span>
+          <span class="pill yellow">MVP or full system?</span>
+        </div>
+        <div class="tip-box" style="margin-top:8px;">💡 Ask 4-6 targeted questions, then summarize your understanding before designing. Don't ask everything.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-green"></div><div class="card-title">Trade-off Language</div></div>
+      <div class="card-body">
+        <div class="code"><span class="c">// Presenting options</span>
+"We have two approaches here:
+ [Option A] gives us X benefit
+ but the cost is Y.
+ [Option B] gives us Z instead.
+ Given [requirement], I'd go with A."
+
+<span class="c">// Acknowledging complexity</span>
+"This is a classic consistency vs
+ availability trade-off..."
+
+<span class="c">// Progressive detail</span>
+"For a V1, I'd simplify this to...
+ and only add this complexity
+ once data shows we need it."
+
+<span class="c">// When you don't know</span>
+"I'd explore options X, Y, and Z here.
+ My instinct is X because...
+ but I'd validate with benchmarks."
+
+<span class="c">// Proactive concerns</span>
+"One thing I'd want to think about
+ is what happens when [failure]..."</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="dot dot-purple"></div><div class="card-title">Non-Functional Requirements Checklist</div></div>
+      <div class="card-body">
+        <div class="psec-title">Always Cover These</div>
+        <div class="row"><span class="row-key">Scalability</span><span class="row-val">How does it handle 10× growth? What's the first bottleneck?</span></div>
+        <div class="row"><span class="row-key">Availability</span><span class="row-val">SLA target? No SPOF. Active-active or active-passive? Multi-region?</span></div>
+        <div class="row"><span class="row-key green">Latency</span><span class="row-val">p50 / p99 targets. Where to add cache. CDN for global users.</span></div>
+        <div class="row"><span class="row-key green">Consistency</span><span class="row-val">Strong or eventual? What's the cost of stale reads for this use case?</span></div>
+        <div class="row"><span class="row-key orange">Security</span><span class="row-val">AuthN/AuthZ. Rate limiting. Encryption in transit + at rest. Secrets management.</span></div>
+        <div class="row"><span class="row-key orange">Observability</span><span class="row-val">Metrics (4 golden signals). Structured logs + correlation IDs. Distributed traces. Alerts.</span></div>
+        <div class="row"><span class="row-key purple" style="color:var(--accent4)">Fault Tolerance</span><span class="row-val">Circuit breakers. Retries with backoff. Graceful degradation. DLQ for failures.</span></div>
+        <div class="row"><span class="row-key purple" style="color:var(--accent4)">Disaster Recovery</span><span class="row-val">RPO (max data loss). RTO (max downtime). Backup strategy. Failover plan.</span></div>
+      </div>
+    </div>
+
+    <div class="card col-span-2">
+      <div class="card-header"><div class="dot dot-yellow"></div><div class="card-title">Component Selection Quick Reference</div></div>
+      <div class="card-body">
+        <div class="grid-3" style="gap:12px;">
+          <div>
+            <div class="psec-title">When To Use What</div>
+            <table class="ref-table">
+              <tr><th>Need</th><th>Use</th></tr>
+              <tr><td>Fast key-value cache</td><td>Redis</td></tr>
+              <tr><td>Full-text search</td><td>Elasticsearch</td></tr>
+              <tr><td>Event streaming</td><td>Kafka</td></tr>
+              <tr><td>Task queue</td><td>RabbitMQ / SQS</td></tr>
+              <tr><td>Object storage</td><td>S3</td></tr>
+              <tr><td>Config/service discovery</td><td>Consul / etcd</td></tr>
+              <tr><td>Auth provider</td><td>Keycloak / Auth0</td></tr>
+              <tr><td>Distributed lock</td><td>Redis (Redlock) / ZK</td></tr>
+              <tr><td>API rate limiting</td><td>Redis + sliding window</td></tr>
+              <tr><td>Real-time communication</td><td>WebSocket / SSE</td></tr>
+              <tr><td>Global DB</td><td>CockroachDB / Spanner</td></tr>
+              <tr><td>Graph data</td><td>Neo4j / Neptune</td></tr>
+            </table>
+          </div>
+          <div>
+            <div class="psec-title">Data Flow Patterns</div>
+            <table class="ref-table">
+              <tr><th>Pattern</th><th>Use For</th></tr>
+              <tr><td>Lambda Architecture</td><td>Batch + stream processing. Complex. Speed layer + batch layer.</td></tr>
+              <tr><td>Kappa Architecture</td><td>Stream only. Simpler. Replay events to reprocess historical data.</td></tr>
+              <tr><td>Outbox Pattern</td><td>Reliable event publishing. Write event to DB atomically with business data. Poller publishes.</td></tr>
+              <tr><td>Change Data Capture</td><td>Debezium reads DB WAL. Events on every DB change. Reliable integration.</td></tr>
+              <tr><td>CQRS + Event Sourcing</td><td>Separate read/write. State = events. Complex but highly auditable.</td></tr>
+            </table>
+          </div>
+          <div>
+            <div class="psec-title">Anti-Patterns to Avoid</div>
+            <div class="warn-box">❌ Sharding before reading replicas and caching</div>
+            <div class="warn-box">❌ Microservices for a prototype or small team</div>
+            <div class="warn-box">❌ Storing floats for money (use cents/integers)</div>
+            <div class="warn-box">❌ SELECT * in queries at scale</div>
+            <div class="warn-box">❌ Synchronous calls in a fanout (use queue)</div>
+            <div class="warn-box">❌ No timeout on downstream calls</div>
+            <div class="warn-box">❌ No idempotency on payment endpoints</div>
+            <div class="warn-box">❌ Secrets hardcoded or in env logs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function toggleProblem(header) {
+    const body = header.nextElementSibling;
+    const chevron = header.querySelector('.chevron');
+    const isOpen = body.classList.contains('open');
+
+    body.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open', !isOpen);
+  }
+</script>
+</body>
+</html>
